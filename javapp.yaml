@@ -1,0 +1,37 @@
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: my-java-app
+  namespace: default
+  labels:
+    app: my-java-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: my-java-app
+  template:
+    metadata:
+      labels:
+        app: my-java-app
+    spec:
+      containers:
+      - name: my-java-app
+        image: "farislinux/my-app-1.0:latest"
+        ports:
+          - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-java--app
+  namespace: default
+spec:
+  selector:
+    app: nodejs-app
+  type: LoadBalancer
+  ports:
+  - name: http
+    targetPort: 3000
+    port: 8080
