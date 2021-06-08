@@ -3,10 +3,13 @@ pipeline{
     tools{
         maven 'MAVEN'
     }
+    environment {
+    imageLine = 'farislinux/my-app-1.0:latest'
+    }
 
     stages{
         stage('Compile Stage'){
-            steps{
+            steps {
                 checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'farislinux', url: 'https://github.com/farislinux/jenkins-docker-example.git']]])
                 sh 'mvn -Dmaven.test.failure.ignore=true clean package'
             }
@@ -35,6 +38,12 @@ pipeline{
                 
             }
         }
+        stage('Analyze with Anchore plugin') {
+            steps {
+            writeFile file: 'anchore_images', text: imageLine
+            anchore bailOnFail: false, bailOnPluginFail: false, name: 'anchore_images'
+          }
+        }
         stage('Deploy Docker Image'){
             steps{
                 script{
@@ -51,9 +60,9 @@ pipeline{
             sh "scp -o StrictHostKeyChecking=no ${WORKSPACE}/javapp.yaml osboxes@localhost:/home/osboxes"
             script {
                 try{
-                    sh "ssh osboxes@localhost kubectl apply -f ."
+                    sh "ssh osboxes@localhost kubectl apply -f javapp.yaml"
                 }catch(error){
-                    sh "ssh osboxes@localhost kubectl create -f ."
+                    sh "ssh osboxes@localhost kubectl create -f javapp.yaml"
 				}	
 			}
         }
